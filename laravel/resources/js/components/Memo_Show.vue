@@ -22,6 +22,16 @@ const fetchMemos = async () => {
         err.value = e.message ?? "不明なエラー"
     }
 }
+
+const handleDelete = async(id) => {
+    memos.value = memos.value.filter(m => m.id !== id)
+    try{
+        const res = await fetch(`/api/memos/${id}`,{method: "DELETE"})
+        if(!res.ok) throw new Error("削除に失敗しました")
+    } catch (e) {
+        alert(e.message || "削除に失敗しました")
+    }
+}
 defineExpose({fetchMemos})
 onMounted(fetchMemos)
 </script>
@@ -43,6 +53,14 @@ onMounted(fetchMemos)
 
                 <p class = "text-gray-800 font-medium">{{memo.content}}</p>
                 <p class = "text-gray-500 text-sm mt-1">{{ fmt(memo.created_at)}}</p>
+
+                <button type = "button"
+                        class = " absolute right-3 top-3 text-red-600 hover:text-red-700 opacity-0 group-hover:opacity-100 transition"
+                        @click.stop = "handleDelete(memo.id)"
+                        >
+                    <TrashSvg/>
+                </button>
+
             </article>
 
         </div>
