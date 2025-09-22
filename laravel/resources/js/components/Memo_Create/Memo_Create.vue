@@ -41,7 +41,7 @@ const handleSave = async () => {
              <Memo_Create_Header/>
          </div>
          <div class = "px-6 py-4">
-             <TextAreaForm v-model = "content"/>
+             <TextAreaForm v-model = "content" @enterSave = "handleSave"/>
          </div>
          <div class = "border-t px-6 py-4 flex justify-end">
              <Memo_Save :disabled = "!content" @save="handleSave"></Memo_Save>
