@@ -12,7 +12,7 @@ const handleUpdate = (val) => {
 const handleSave = async () => {
     try {
         const csrfToken = document.head.querySelector('meta[name="csrf-token"]').content
-        const res = await fetch("/api/memo",{
+        const res = await fetch("/api/memos",{
             method : "POST",
             headers : {
                 "Content-Type" : "application/json",

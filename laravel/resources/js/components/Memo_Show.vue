@@ -3,19 +3,27 @@ import { ref , onMounted } from "vue"
 import DocumentSvg from "./svgs/DocumentSvg.vue"
 import TrashSvg from "./svgs/TrashSvg.vue"
 
-//const memos = ref([])
-
+const memos = ref([])
+const err = ref("")
 const fmt = (iso) =>
     new Intl.DateTimeFormat("ja-JP", {
         year: "numeric", month: "2-digit", day: "2-digit",
         hour: "2-digit", minute: "2-digit", hour12: false,
     }).format(new Date(iso))
 
-const memos = [
-{ id : 1,content: "Vue.jsの基本構文を復習する",created_at: "2024-07-30 10:30"},
-{ id : 2,content: "Laravelのルーティングについて調べる",created_at: "2024-07-30 9:15"},
-]
-
+const fetchMemos = async () => {
+    err.value = ""
+    try {
+        const res = await fetch("/api/memos")
+        if (!res.ok) throw new Error("一覧の取得に失敗しました。")
+        const data = await res.json()
+        memos.value = (data.memos ?? [])
+    }catch(e){
+        err.value = e.message ?? "不明なエラー"
+    }
+}
+defineExpose({fetchMemos})
+onMounted(fetchMemos)
 </script>
 <template>
     <section class = "w-full max-w-2xl mx-auto mt-2 bg-orange-50 rounded-xl p-6">
