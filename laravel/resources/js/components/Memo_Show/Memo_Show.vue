@@ -1,39 +1,45 @@
 <script setup>
-import { ref , onMounted } from "vue"
-import DocumentSvg from "./svgs/DocumentSvg.vue"
-import TrashSvg from "./svgs/TrashSvg.vue"
+import { ref , onMounted , watch } from "vue"
+import {useToast} from "@/composables/useToast.js";
+import DocumentSvg from "../svgs/DocumentSvg.vue"
+import Memo_Card from "./Memo_Card.vue"
 
 const memos = ref([])
-const err = ref("")
-const fmt = (iso) =>
-    new Intl.DateTimeFormat("ja-JP", {
-        year: "numeric", month: "2-digit", day: "2-digit",
-        hour: "2-digit", minute: "2-digit", hour12: false,
-    }).format(new Date(iso))
-
+const q = ref("")
+let timer = null
+const toast = useToast()
 const fetchMemos = async () => {
-    err.value = ""
-    try {
-        const res = await fetch("/api/memos")
-        if (!res.ok) throw new Error("一覧の取得に失敗しました。")
+    try{
+        const params = new URLSearchParams()
+        if(q.value.trim()) params.set("q",q.value.trim())
+        const res = await fetch (`/api/memos?${params.toString()}`)
+        if(!res.ok) toast.error("一覧の取得に失敗しました。")
         const data = await res.json()
-        memos.value = (data.memos ?? [])
-    }catch(e){
-        err.value = e.message ?? "不明なエラー"
+        memos.value = data.memos ?? []
+    } catch (e) {
+        toast.error(e.message || "不明なエラー")
     }
 }
 
-const handleDelete = async(id) => {
-    memos.value = memos.value.filter(m => m.id !== id)
-    try{
-        const res = await fetch(`/api/memos/${id}`,{method: "DELETE"})
-        if(!res.ok) throw new Error("削除に失敗しました")
-    } catch (e) {
-        alert(e.message || "削除に失敗しました")
-    }
+const doSearch = async() => {
+    clearTimeout(timer)
+    await fetchMemos()
 }
-defineExpose({fetchMemos})
+
+const inputEl = ref(null)
+const clearSearch = async () => {
+    q.value = ""
+    await fetchMemos()
+    inputEl.value?.focus()
+}
+
+defineExpose({ fetchMemos})
 onMounted(fetchMemos)
+
+watch(q, () =>{
+    clearTimeout(timer)
+    timer = setTimeout(fetchMemos, 300)
+})
 </script>
 <template>
     <section class = "w-full max-w-2xl mx-auto mt-2 bg-orange-50 rounded-xl p-6">
@@ -44,25 +50,32 @@ onMounted(fetchMemos)
                 {{memos.length}}件
             </span>
         </div>
-
-        <div class = "space-y-3">
-            <article
+        <div class = "flex gap-2 mb-4">
+            <input
+                v-model = "q"
+                type = "search"
+                placeholder = "メモの内容を検索 (Enterで検索）"
+                class = "w-full rounded-lg border border-gray-300 px-3 py-2"
+                @keydown.enter.prevent = "doSearch"
+            >
+            <button
+                class = "px-4 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-50"
+                :disabled = "!q.trim()"
+                @click = "doSearch"
+                title = "検索">
+                検索
+            </button>
+        </div>
+        <hr class="border-t border-gray-300 my-4" />
+        <div class = "space-y-3" v-if = "memos.length">
+            <Memo_Card
                 v-for = "memo in memos"
                 :key = "memo.id"
-                class = "group relative bg-white p-4 rounded-lg ring-1 ring-black/5 hover:shadow-md transition cursor-pointer">
-
-                <p class = "text-gray-800 font-medium">{{memo.content}}</p>
-                <p class = "text-gray-500 text-sm mt-1">{{ fmt(memo.created_at)}}</p>
-
-                <button type = "button"
-                        class = " absolute right-3 top-3 text-red-600 hover:text-red-700 opacity-0 group-hover:opacity-100 transition"
-                        @click.stop = "handleDelete(memo.id)"
-                        >
-                    <TrashSvg/>
-                </button>
-
-            </article>
-
+                :memo = "memo"
+                @updated = "fetchMemos"
+                @deleted = "fetchMemos"
+                />
         </div>
+        <p v-else class = "text-gray-500">メモがありません</p>
     </section>
 </template>

@@ -1,11 +1,13 @@
 <script setup>
 import { ref } from "vue"
+import { useToast } from "@/composables/useToast.js"
 import Memo_Create_Header from "./Memo_Create_Header.vue"
 import TextAreaForm from "./TextAreaForm.vue"
 import Memo_Save from "./Memo_Save.vue"
 
 const content = ref("")
 const emit = defineEmits(["saved"])
+const toast = useToast()
 const handleUpdate = (val) => {
     content.value = val
 }
@@ -26,11 +28,11 @@ const handleSave = async () => {
         if(!res.ok) throw new Error("保存に失敗しました")
 
         content.value = ""
-        alert("保存しました")
+        toast.success("保存しました")
         emit("saved")
     }catch(err){
         console.error(err)
-        alert("エラーが発生しました")
+        toast.error(err.message || "保存に失敗しました")
     }
 }
 </script>

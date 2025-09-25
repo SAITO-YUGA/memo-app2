@@ -2,7 +2,9 @@
 import { ref } from "vue"
 import Header from "./components/Header.vue"
 import Memo_Create from "./components/Memo_Create/Memo_Create.vue"
-import Memo_Show from "./components/Memo_Show.vue"
+import Memo_Show from "./components/Memo_Show/Memo_Show.vue"
+import ToastHost from "./components/Toast/ToastHost.vue"
+
 const memoShowRef = ref(null)
 const handleSaved = () => {
     memoShowRef.value?.fetchMemos()
@@ -12,4 +14,5 @@ const handleSaved = () => {
     <Header/>
     <Memo_Create @saved = "handleSaved"/>
     <Memo_Show ref = "memoShowRef"/>
+    <ToastHost/>
 </template>
