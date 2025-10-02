@@ -25,7 +25,7 @@ const handleSave = async () => {
             }),
 
         })
-        if(!res.ok) throw new Error("保存に失敗しました")
+        if(!res.ok) toast.error("保存に失敗しました")
 
         content.value = ""
         toast.success("保存しました")
