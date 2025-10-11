@@ -35,16 +35,29 @@ const saveEdit = async () => {
     }
 }
 
+const toggleFavorite = async() => {
+    try {
+        const res = await fetch(`/api/memos/${props.memo.id}/favorite`, {
+            method: "PATCH",
+            headers: {"Content-Type": "application/json"},
+        })
+        if (!res.ok) throw new Error("お気に入りの更新に失敗しました")
+        emit("updated")
+    } catch (e) {
+        toast.error(e.message || "お気に入りの更新に失敗しました")
+    }
+}
 const handleDelete = async() => {
-    try{
-        const res = await fetch(`/api/memos/${props.memo.id}`,{method: "DELETE"})
-        if(!res.ok) return toast.error("削除に失敗しました")
+    try {
+        const res = await fetch(`/api/memos/${props.memo.id}`, {method: "DELETE"})
+        if (!res.ok) return toast.error("削除に失敗しました")
         emit("deleted")
         toast.info("削除しました。")
     } catch (e) {
         toast.error(e.message || "削除に失敗しました")
     }
 }
+
 </script>
 
 <template>
@@ -71,12 +84,22 @@ const handleDelete = async() => {
         </div>
 
         <div v-else>
+            <div v-if="props.memo.is_favorite" class="text-yellow-500 text-sm font-semibold mb-1">
+                ★
+            </div>
             <p class = "text-gray-800 font-medium">{{props.memo.content}}</p>
             <p class = "text-gray-500 text-sm mt-1">{{ fmt(props.memo.created_at)}}</p>
         </div>
         <div
             v-if = "!isEditing"
             class = "absolute right-3 top-3 flex gap-2 opacity-0 group-hover:opacity-100 transition">
+            <button
+                @click.stop = "toggleFavorite"
+                class = "hover:scale-105 transition"
+                :title = "props.memo.is_favorite ? 'お気に入り解除' : 'お気に入りに追加'"
+                aria-label = "お気に入り">
+                ⭐️
+            </button>
             <button
                 @click.stop = "isEditing = true"
                 class = "text-blue-600 hover:text-blue-800"

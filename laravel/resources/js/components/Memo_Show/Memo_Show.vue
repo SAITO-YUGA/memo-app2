@@ -7,6 +7,7 @@ import Memo_Card from "./Memo_Card.vue"
 const memos = ref([])
 const q = ref("")
 const page = ref(1)
+const favoriteOnly = ref(false)
 const meta = ref({
     current_page: 1,
     last_page: 1,
@@ -23,7 +24,7 @@ const fetchMemos = async () => {
         const params = new URLSearchParams()
         if(q.value.trim()) params.set("q",q.value.trim())
         params.set("page", String(page.value))
-
+        if(favoriteOnly.value) params.set("favorite","1")
         const res = await fetch (`/api/memos?${params.toString()}`)
         if(!res.ok) toast.error("一覧の取得に失敗しました。")
         const data = await res.json()
@@ -43,8 +44,8 @@ const doSearch = async() => {
 
 const goPage = (n) => {
     if(n < 1 || n > meta.value.last_page || n === page.value) return
-        page.value = n
-        fetchMemos()
+    page.value = n
+    fetchMemos()
 }
 
 const paginationRange = (current, last) => {
@@ -69,6 +70,11 @@ watch(q, () =>{
     clearTimeout(timer)
     page.value = 1
     timer = setTimeout(fetchMemos, 300)
+})
+watch(favoriteOnly, () => {
+    page.value = 1
+    fetchMemos()
+
 })
 </script>
 <template>
@@ -98,6 +104,12 @@ watch(q, () =>{
                 title = "検索">
                 検索
             </button>
+        </div>
+        <div class = "flex items-center gap-3 mb-4">
+            <label class = "inline-flex items-center gap-2 text-sm text-gray-700">
+                <input type = "checkbox" v-model = "favoriteOnly" />
+                お気に入りのみ
+            </label>
         </div>
         <hr class="border-t border-gray-300 my-4" />
         <div class = "space-y-3" v-if = "memos.length">
